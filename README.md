@@ -1,4 +1,7 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## TASK MANAGEMENT 
+
+For the task division we use Jam Board, click [this](https://jamboard.google.com/d/1Oz9P_Bq2WawDfulKNGgQcbNTTI3dHZUTKygbfDetMAY/edit?usp=sharing)
+
 
 ## Getting Started
 
