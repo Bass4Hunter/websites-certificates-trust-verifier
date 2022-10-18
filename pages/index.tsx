@@ -1,15 +1,18 @@
-import { Typography } from '@mui/material';
+import { Alert, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
 import * as React from 'react';
 import Item from '../components/Item';
 import Websites from '../components/Websites';
 import search from '../types/search';
-
+function delay(time: any) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
 function verify(search: any) {
   let obj = {
     website: search,
@@ -22,14 +25,48 @@ function verify(search: any) {
 
 const Home: NextPage = () => {
   const [data, setData] = React.useState<Array<search>>([])
-  const [search, setSearch] = React.useState<string | null>()
+  const [search, setSearch] = React.useState<string>('')
+  const [error, setError] = React.useState<Boolean>(false)
 
   const handleTyping = (e: any) => {
     setSearch(e.target.value)
   }
 
-  const handleClickVerify = () => {
-    setData([...data, verify(search)])
+  const handleClickVerify = async () => {
+    const reg = /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/
+
+    if(reg.test(search)){
+      const res = await fetch(`http://localhost:3000/api/${search}`)
+      await delay(1000);
+  
+      const res2 = await fetch(`http://localhost:3000/api/cat`)
+      const result2 = await res2.json()
+      let tmozilla = 0
+      let tgoogle = 0
+      let tmicrosoft = 0
+      console.log(result2)
+      if (result2 == '') {
+        tmozilla = 0
+        tgoogle = 0
+        tmicrosoft = 0
+      } else {
+        tmozilla = 2
+        tgoogle = 2
+        tmicrosoft = 2
+      }
+      let proces: search = {
+        website: result2.result,
+        mozilla: tmozilla,
+        google: tgoogle,
+        microsoft: tmicrosoft,
+      }
+  
+      setData([...data, proces])
+    }else{
+      setError(true)
+    }
+
+
   }
 
   const handleClickClean = () => {
@@ -57,13 +94,14 @@ const Home: NextPage = () => {
           </Box>
         </Grid>
 
-        <Grid container item xs={2} 
+        <Grid container item xs={2}
           direction="row"
           justifyContent="center"
           alignItems="center"
         >
 
           <Grid item xs={5} md={5}>
+            {error && <Alert severity="error" onClose={() => { setError(false) }}>error de formato</Alert>}
             <TextField onChange={handleTyping} fullWidth id="outlined-basic" label="ingresar URL o verificar..." variant="outlined" />
           </Grid>
 
@@ -91,13 +129,13 @@ const Home: NextPage = () => {
         alignItems="center"
       >
         <Grid item xs={2}>
-          <Item>Ver Mozilla Trust Store</Item>
+          <Item>  <Link href='/Mozilla'>Ver Mozilla Trust Store </Link></Item>
         </Grid >
         <Grid item xs={2}>
-          <Item>Ver Microsoft Trust Store</Item>
+          <Item> <Link href='/Microsoft'> Ver Microsoft Trust Store  </Link></Item>
         </Grid>
         <Grid item xs={2}>
-          <Item>Ver Google Trust Store</Item>
+          <Item><Link href='/Google'> Ver Google Trust Store</Link> </Item>
         </Grid>
       </Grid>
     </Box>
