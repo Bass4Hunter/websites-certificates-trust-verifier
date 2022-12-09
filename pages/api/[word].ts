@@ -2,14 +2,20 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<string>
+  res: NextApiResponse<any>
 ) {
   const word = req.query.word;
   const temp = word!.toString();
   const aea = temp.trim();
   const { exec } = require("child_process");
-  console.log(word);
-  // exec(`openssl s_client -showcerts ${aea}:443 > result.txt`)
-  exec(`openssl s_client -showcerts ${aea}:443 > public/result.txt`);
-  res.status(200).json("done");
+  exec(`cat ${aea}`, (error: any, stdout: any, stderr: any) => {
+    if (error) {
+      return;
+    }
+
+    if (stderr) {
+      return;
+    }
+    res.status(200).json({ result: stdout });
+  });
 }
