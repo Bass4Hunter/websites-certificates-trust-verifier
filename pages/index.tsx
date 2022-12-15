@@ -9,22 +9,10 @@ import Link from "next/link";
 import * as React from "react";
 import Item from "../components/Item";
 import Websites from "../components/Websites";
-import search from "../types/search";
-function delay(time: any) {
-  return new Promise((resolve) => setTimeout(resolve, time));
-}
-function verify(search: any) {
-  let obj = {
-    website: search,
-    google: 1,
-    mozilla: 2,
-    microsoft: 3,
-  };
-  return obj;
-}
+import TSearch from "../types/search";
 
 const Home: NextPage = () => {
-  const [data, setData] = React.useState<Array<search>>([]);
+  const [data, setData] = React.useState<Array<TSearch>>([]);
   const [search, setSearch] = React.useState<string>("");
   const [error, setError] = React.useState<Boolean>(false);
 
@@ -32,37 +20,28 @@ const Home: NextPage = () => {
     setSearch(e.target.value);
   };
 
-  const handleClickVerify = async () => {
+  const handleClickVerify = async (text: string | undefined) => {
+    console.log("HANDLE CLICK", text);
+    if (text == "") return;
+
     const reg =
       /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
 
-    if (reg.test(search)) {
-      const res = await fetch(`http://localhost:3000/api/${search}`);
-      await delay(1000);
+    if (text && reg.test(text)) {
+      const res = await fetch(`http://localhost:3000/api/${text}`);
+      const result = await res.json();
 
-      const res2 = await fetch(`http://localhost:3000/api/cat`);
-      const result2 = await res2.json();
-      let tmozilla = 0;
-      let tgoogle = 0;
-      let tmicrosoft = 0;
-
-      if (result2 == "") {
-        tmozilla = 0;
-        tgoogle = 0;
-        tmicrosoft = 0;
-      } else {
-        tmozilla = 2;
-        tgoogle = 2;
-        tmicrosoft = 2;
-      }
-      let proces: search = {
-        website: result2.result,
-        mozilla: tmozilla,
-        google: tgoogle,
-        microsoft: tmicrosoft,
+      let response: TSearch = {
+        certificates: [],
+        website: result.url,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        error: result.error,
+        mozilla: 0,
+        google: 0,
+        microsoft: 0,
       };
-
-      setData([...data, proces]);
+      setData((prev) => [...prev, response]);
     } else {
       setError(true);
     }
@@ -70,6 +49,19 @@ const Home: NextPage = () => {
 
   const handleClickClean = () => {
     setData([]);
+  };
+
+  const showFile = async (e: any) => {
+    e.preventDefault();
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      const text = e.target?.result;
+      const urls = text?.toString().split("\n");
+      if (urls) for (const url of urls) await handleClickVerify(url);
+    };
+
+    reader.readAsText(e.target.files[0]);
   };
 
   return (
@@ -135,18 +127,28 @@ const Home: NextPage = () => {
             </Grid>
 
             <Grid item xs={1} md={3} sx={{ textAlign: "center" }}>
-              <Button onClick={handleClickVerify} variant="outlined">
+              <Button
+                onClick={() => handleClickVerify(search)}
+                variant="outlined"
+              >
                 VERIFICAR
               </Button>
             </Grid>
             <Grid item xs={2}>
-              <Item>CARGAR EN LOTE</Item>
+              <Button
+                variant="contained"
+                component="label"
+                onChange={(e) => showFile(e)}
+              >
+                CARGAR EN LOTE
+                <input hidden accept=".txt" type="file" />
+              </Button>
             </Grid>
           </Grid>
 
           <Grid item xs={10}>
             <Box width="100%" mt={7}>
-              <Websites data={data} />
+              <Websites searchs={data} />
             </Box>
             <Box
               mt={5}
@@ -169,19 +171,17 @@ const Home: NextPage = () => {
         >
           <Grid item xs={2}>
             <Item>
-              {" "}
               <Link href="/Mozilla">Ver Mozilla Trust Store </Link>
             </Item>
           </Grid>
           <Grid item xs={2}>
             <Item>
-              {" "}
               <Link href="/Microsoft"> Ver Microsoft Trust Store </Link>
             </Item>
           </Grid>
           <Grid item xs={2}>
             <Item>
-              <Link href="/Google"> Ver Google Trust Store</Link>{" "}
+              <Link href="/Google"> Ver Google Trust Store</Link>
             </Item>
           </Grid>
         </Grid>
